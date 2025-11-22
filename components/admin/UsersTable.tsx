@@ -264,7 +264,7 @@ export default function UsersTable({ users }: UsersTableProps) {
                   disabled={editingUser.id === BigInt(1)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
                 >
-                  <option value="WAITER">🍽️ Garzón - Quiosco</option>
+                  <option value="WAITER">🍽️ Garzón - Restaurant</option>
                   <option value="CHEF">👨‍🍳 Chef - Órdenes</option>
                   <option value="REPARTIDOR">🛵 Repartidor - Entregas</option>
                   <option value="CLIENTE">👤 Cliente - App Móvil</option>

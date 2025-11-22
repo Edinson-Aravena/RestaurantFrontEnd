@@ -8,6 +8,7 @@ export async function createUserAction(formData: FormData) {
     const username = formData.get('username') as string;
     const password = formData.get('password') as string;
     const name = formData.get('name') as string;
+    const lastname = formData.get('lastname') as string;
     const email = formData.get('email') as string;
     const phone = formData.get('phone') as string;
     const role = formData.get('role') as string;
@@ -20,6 +21,13 @@ export async function createUserAction(formData: FormData) {
       };
     }
 
+    if (!name) {
+      return {
+        success: false,
+        error: 'El nombre es requerido'
+      };
+    }
+
     if (password.length < 6) {
       return {
         success: false,
@@ -27,12 +35,16 @@ export async function createUserAction(formData: FormData) {
       };
     }
 
+    // Concatenar +56 al teléfono si existe
+    const fullPhone = phone ? `+56${phone.replace(/\s/g, '')}` : undefined;
+
     // Llamar a la API del backend para crear el usuario
     const response = await createUserApi({
       username,
       email: email || undefined,
-      name: name || username,
-      phone: phone || undefined,
+      name,
+      lastname: lastname || undefined,
+      phone: fullPhone,
       password,
       role
     });

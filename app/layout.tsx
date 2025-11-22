@@ -17,8 +17,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Quiosco Next.js con App router y Prisma",
-  description: "Quiosco Next.js con App router y Prisma",
+  title: "Restaurant Next.js con App router y Prisma",
+  description: "Restaurant Next.js con App router y Prisma",
 };
 
 export default function RootLayout({

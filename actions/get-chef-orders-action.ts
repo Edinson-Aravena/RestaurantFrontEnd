@@ -90,9 +90,9 @@ export async function getChefOrdersAction(): Promise<ChefOrder[]> {
             return {
                 orderId: `D-${order.id}`,
                 orderType: 'DELIVERY' as const,
-                customerName: order.client.name,
-                address: `${order.address.address}, ${order.address.neighborhood}`,
-                anotaciones: null,
+                customerName: order.client?.name || order.clientName || 'Cliente',
+                address: order.address ? `${order.address.address}, ${order.address.neighborhood}` : 'Dirección no disponible',
+                anotaciones: order.anotaciones,
                 total,
                 orderDate: new Date(Number(order.timestamp)),
                 prepStatus: order.orderReadyAt ? 'READY' : 
@@ -111,6 +111,11 @@ export async function getChefOrdersAction(): Promise<ChefOrder[]> {
         // Combinar y ordenar por fecha
         const allOrders = [...mappedQuioscoOrders, ...mappedDeliveryOrders]
             .sort((a, b) => a.orderDate.getTime() - b.orderDate.getTime())
+
+        console.log('=== ÓRDENES DEL CHEF ===');
+        allOrders.forEach(order => {
+            console.log(`${order.orderId}: ${order.customerName} - Anotaciones: "${order.anotaciones || 'ninguna'}"`);
+        });
 
         return allOrders
 

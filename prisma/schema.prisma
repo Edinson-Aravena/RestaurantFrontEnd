@@ -4,9 +4,9 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
-// Modelo de Categorías (combinado para ambos sistemas)
 model Category {
   id          BigInt    @id @default(autoincrement())
   name        String    @db.VarChar(180)
@@ -21,7 +21,6 @@ model Category {
   @@map("categories")
 }
 
-// Modelo de Productos (combinado para ambos sistemas)
 model Product {
   id                    BigInt                    @id @default(autoincrement())
   name                  String                    @db.VarChar(180)
@@ -34,63 +33,63 @@ model Product {
   categoryId            BigInt                    @map("id_category")
   createdAt             DateTime                  @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt             DateTime                  @updatedAt @map("updated_at") @db.Timestamp(0)
-  category              Category                  @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   orderItems            OrderProducts[]
   deliveryOrderProducts DeliveryOrderHasProduct[]
+  category              Category                  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
+  @@index([categoryId], map: "products_id_category_fkey")
   @@map("products")
 }
 
-// Modelo de Órdenes del Quiosco
 model Order {
   id                Int             @id @default(autoincrement())
   name              String          @db.VarChar(255)
   total             Float
-  anotaciones       String?         @db.Text
   date              DateTime        @default(now())
   status            Boolean         @default(false)
-  orderType         OrderType       @default(QUIOSCO) @map("order_type")
   orderInProgressAt DateTime?       @map("order_in_progress_at")
   orderReadyAT      DateTime?       @map("order_ready_at")
   orderDeliveredAt  DateTime?       @map("order_delivered_at")
+  orderType         OrderType       @default(QUIOSCO) @map("order_type")
+  anotaciones       String?         @db.Text
   orderProducts     OrderProducts[]
 
   @@map("orders_quiosco")
 }
 
 model OrderProducts {
-  id        Int      @id @default(autoincrement())
-  orderId   Int      @map("order_id")
-  productId BigInt   @map("product_id")
+  id        Int     @id @default(autoincrement())
+  orderId   Int     @map("order_id")
+  productId BigInt  @map("product_id")
   quantity  Int
-  order     Order    @relation(fields: [orderId], references: [id])
-  product   Product  @relation(fields: [productId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
 
+  @@index([orderId], map: "order_products_quiosco_order_id_fkey")
+  @@index([productId], map: "order_products_quiosco_product_id_fkey")
   @@map("order_products_quiosco")
 }
 
-// Modelo de Usuarios (combinado)
 model User {
-  id               BigInt         @id @default(autoincrement())
-  email            String?        @unique @db.VarChar(100)
-  username         String?        @unique @db.VarChar(90)
-  name             String         @db.VarChar(90)
-  lastname         String?        @db.VarChar(90)
-  phone            String?        @unique @db.VarChar(90)
-  image            String?        @db.VarChar(255)
-  password         String         @db.VarChar(255)
+  id               BigInt          @id @default(autoincrement())
+  email            String?         @unique @db.VarChar(100)
+  username         String?         @unique @db.VarChar(90)
+  name             String          @db.VarChar(90)
+  lastname         String?         @db.VarChar(90)
+  phone            String?         @unique @db.VarChar(90)
+  image            String?         @db.VarChar(255)
+  password         String          @db.VarChar(255)
   role             UserRole?
-  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamp(0)
-  roles            UserHasRole[]
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt        DateTime        @updatedAt @map("updated_at") @db.Timestamp(0)
   addresses        Address[]
   ordersAsClient   DeliveryOrder[] @relation("ClientOrders")
   ordersAsDelivery DeliveryOrder[] @relation("DeliveryOrders")
+  roles            UserHasRole[]
 
   @@map("users")
 }
 
-// Modelo de Roles
 model Role {
   id        BigInt        @id @default(autoincrement())
   name      String        @unique @db.VarChar(90)
@@ -103,69 +102,76 @@ model Role {
   @@map("roles")
 }
 
-// Tabla intermedia Usuario-Roles
 model UserHasRole {
   userId    BigInt   @map("id_user")
   roleId    BigInt   @map("id_rol")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
-  user      User     @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  role      Role     @relation(fields: [roleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
+  @@index([roleId], map: "user_has_roles_id_rol_fkey")
   @@map("user_has_roles")
 }
 
-// Modelo de Direcciones
 model Address {
-  id            BigInt          @id @default(autoincrement())
-  address       String          @db.VarChar(255)
-  neighborhood  String          @db.VarChar(180)
-  lat           Float           @db.Double
-  lng           Float           @db.Double
-  userId        BigInt          @map("id_user")
-  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt     DateTime        @updatedAt @map("updated_at") @db.Timestamp(0)
-  user          User            @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  orders        DeliveryOrder[]
+  id           BigInt          @id @default(autoincrement())
+  address      String          @db.VarChar(255)
+  neighborhood String          @db.VarChar(180)
+  lat          Float
+  lng          Float
+  userId       BigInt?         @map("id_user")
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt    DateTime        @updatedAt @map("updated_at") @db.Timestamp(0)
+  user         User?           @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  orders       DeliveryOrder[]
 
+  @@index([userId], map: "address_id_user_fkey")
   @@map("address")
 }
 
-// Modelo de Órdenes de Delivery
 model DeliveryOrder {
-  id                  BigInt                     @id @default(autoincrement())
-  clientId            BigInt                     @map("id_client")
-  deliveryId          BigInt?                    @map("id_delivery")
-  addressId           BigInt                     @map("id_address")
-  lat                 Float?                     @db.Double
-  lng                 Float?                     @db.Double
-  status              String                     @db.VarChar(90)
-  timestamp           BigInt
-  orderInProgressAt   DateTime?                  @map("order_in_progress_at")
-  orderReadyAt        DateTime?                  @map("order_ready_at")
-  orderDeliveredAt    DateTime?                  @map("order_delivered_at")
-  createdAt           DateTime                   @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt           DateTime                   @updatedAt @map("updated_at") @db.Timestamp(0)
-  client              User                       @relation("ClientOrders", fields: [clientId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  delivery            User?                      @relation("DeliveryOrders", fields: [deliveryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  address             Address                    @relation(fields: [addressId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  orderProducts       DeliveryOrderHasProduct[]
+  id                BigInt                    @id @default(autoincrement())
+  clientId          BigInt?                   @map("id_client")
+  deliveryId        BigInt?                   @map("id_delivery")
+  addressId         BigInt?                   @map("id_address")
+  clientName        String?                   @map("client_name") @db.VarChar(180)
+  clientPhone       String?                   @map("client_phone") @db.VarChar(90)
+  deliveryAddress   String?                   @map("delivery_address") @db.VarChar(255)
+  deliveryNeighborhood String?                @map("delivery_neighborhood") @db.VarChar(180)
+  anotaciones       String?                   @db.Text
+  lat               Float?
+  lng               Float?
+  status            String                    @db.VarChar(90)
+  timestamp         BigInt
+  createdAt         DateTime                  @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt         DateTime                  @updatedAt @map("updated_at") @db.Timestamp(0)
+  orderDeliveredAt  DateTime?                 @map("order_delivered_at")
+  orderInProgressAt DateTime?                 @map("order_in_progress_at")
+  orderReadyAt      DateTime?                 @map("order_ready_at")
+  address           Address?                  @relation(fields: [addressId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  client            User?                     @relation("ClientOrders", fields: [clientId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  delivery          User?                     @relation("DeliveryOrders", fields: [deliveryId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  orderProducts     DeliveryOrderHasProduct[]
 
+  @@index([addressId], map: "orders_id_address_fkey")
+  @@index([clientId], map: "orders_id_client_fkey")
+  @@index([deliveryId], map: "orders_id_delivery_fkey")
   @@map("orders")
 }
 
-// Tabla intermedia Órdenes-Productos de Delivery
 model DeliveryOrderHasProduct {
   orderId   BigInt        @map("id_order")
   productId BigInt        @map("id_product")
   quantity  BigInt
   createdAt DateTime      @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamp(0)
-  order     DeliveryOrder @relation(fields: [orderId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  product   Product       @relation(fields: [productId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  order     DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@id([orderId, productId])
+  @@index([productId], map: "orders_has_products_id_product_fkey")
   @@map("orders_has_products")
 }
 

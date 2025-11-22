@@ -1,6 +1,7 @@
 import { prisma } from "@/src/lib/prisma";
 import { formatCurrency } from "@/src/utils";
 import Link from "next/link";
+import { RevenueComparisonChart, OrderDistributionChart, TopProductsChart } from "@/components/admin/DashboardCharts";
 
 async function getDashboardStats() {
   const now = new Date();
@@ -367,81 +368,6 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Comparativa Quiosco vs Delivery */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Ventas QUIOSCO (Local) */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-500 to-red-500 px-6 py-4">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span>🏪</span>
-              Ventas en el Local (Quiosco)
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-orange-50 p-4 rounded-lg">
-                <p className="text-xs text-orange-600 font-semibold mb-1">HOY</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.quioscoRevenue.daily)}</p>
-              </div>
-              <div className="bg-orange-50 p-4 rounded-lg">
-                <p className="text-xs text-orange-600 font-semibold mb-1">SEMANA</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.quioscoRevenue.weekly)}</p>
-              </div>
-              <div className="bg-orange-50 p-4 rounded-lg">
-                <p className="text-xs text-orange-600 font-semibold mb-1">MES</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.quioscoRevenue.monthly)}</p>
-              </div>
-              <div className="bg-orange-50 p-4 rounded-lg">
-                <p className="text-xs text-orange-600 font-semibold mb-1">AÑO</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.quioscoRevenue.yearly)}</p>
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 text-sm">Total de órdenes</span>
-                <span className="text-2xl font-bold text-orange-600">{stats.totalQuioscoOrders}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Ventas DELIVERY (App Móvil) */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span>📱</span>
-              Ventas en App Móvil (Delivery)
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-xs text-blue-600 font-semibold mb-1">HOY</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.deliveryRevenue.daily)}</p>
-              </div>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-xs text-blue-600 font-semibold mb-1">SEMANA</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.deliveryRevenue.weekly)}</p>
-              </div>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-xs text-blue-600 font-semibold mb-1">MES</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.deliveryRevenue.monthly)}</p>
-              </div>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-xs text-blue-600 font-semibold mb-1">AÑO</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.deliveryRevenue.yearly)}</p>
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 text-sm">Total de órdenes</span>
-                <span className="text-2xl font-bold text-blue-600">{stats.totalDeliveryOrders}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Estadísticas Generales */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total Órdenes */}
@@ -487,109 +413,97 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* Gráficos de Análisis */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Productos Más Vendidos */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span>🏅</span>
-              Top 5 Productos Más Vendidos
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {stats.topProducts.map((product: any, index) => (
-                <div key={product.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
-                    index === 0 ? 'bg-yellow-500' : 
-                    index === 1 ? 'bg-gray-400' : 
-                    index === 2 ? 'bg-orange-500' : 
-                    'bg-gray-300'
-                  }`}>
-                    {index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">{product.name}</p>
-                    <p className="text-sm text-gray-500">{product.category.name}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-amber-600">{product.totalSold}</p>
-                    <p className="text-xs text-gray-500">vendidos</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <RevenueComparisonChart 
+          quioscoRevenue={stats.quioscoRevenue}
+          deliveryRevenue={stats.deliveryRevenue}
+        />
+        <OrderDistributionChart 
+          totalQuioscoOrders={stats.totalQuioscoOrders}
+          totalDeliveryOrders={stats.totalDeliveryOrders}
+        />
+      </div>
+
+      {/* Gráfico de Productos Más Vendidos */}
+      <TopProductsChart topProducts={stats.topProducts} />
+
+      {/* Órdenes Recientes */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <span>📋</span>
+            Órdenes Recientes
+          </h2>
+          <Link
+            href="/admin/orders/history"
+            className="text-white text-sm font-semibold hover:underline"
+          >
+            Ver todas →
+          </Link>
         </div>
-
-        {/* Órdenes Recientes */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span>📋</span>
-              Órdenes Recientes
-            </h2>
-            <Link
-              href="/admin/orders/history"
-              className="text-white text-sm font-semibold hover:underline"
-            >
-              Ver todas →
-            </Link>
-          </div>
-          <div className="p-6">
-            <h3 className="text-sm font-bold text-gray-600 mb-3">🏪 Local (Quiosco)</h3>
-            <div className="space-y-3 mb-6">
-              {stats.recentOrders.quiosco.slice(0, 3).map((order: any) => (
-                <div key={`q-${order.id}`} className="p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors border border-orange-200">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                        {order.name}
-                      </div>
-                      <span className="font-semibold text-gray-900 text-sm">Mesa {order.name}</span>
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">
-                        Entregada
-                      </span>
-                    </div>
-                    <span className="text-base font-bold text-gray-900">
-                      {formatCurrency(order.total)}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    {formatDate(order.date)} • {order.orderProducts.length} productos
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <h3 className="text-sm font-bold text-gray-600 mb-3">📱 App Móvil (Delivery)</h3>
-            <div className="space-y-3">
-              {stats.recentOrders.delivery.slice(0, 3).map((order: any) => {
-                const total = order.orderProducts.reduce((sum: number, op: any) => 
-                  sum + (Number(op.quantity) * Number(op.product.price)), 0
-                );
-                return (
-                  <div key={`d-${order.id}`} className="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200">
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Local Orders */}
+            <div>
+              <h3 className="text-sm font-bold text-gray-600 mb-3">🏪 Local (Restaurant)</h3>
+              <div className="space-y-3">
+                {stats.recentOrders.quiosco.slice(0, 3).map((order: any) => (
+                  <div key={`q-${order.id}`} className="p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors border border-orange-200">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                          {order.client.name.charAt(0)}
+                        <div className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                          {order.name}
                         </div>
-                        <span className="font-semibold text-gray-900 text-sm">{order.client.name}</span>
+                        <span className="font-semibold text-gray-900 text-sm">Mesa {order.name}</span>
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">
-                          Entregado
+                          Entregada
                         </span>
                       </div>
                       <span className="text-base font-bold text-gray-900">
-                        {formatCurrency(total)}
+                        {formatCurrency(order.total)}
                       </span>
                     </div>
                     <div className="text-xs text-gray-600">
-                      {formatDate(new Date(Number(order.timestamp)))} • {order.orderProducts.length} productos
+                      {formatDate(order.date)} • {order.orderProducts.length} productos
                     </div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
+            </div>
+
+            {/* Delivery Orders */}
+            <div>
+              <h3 className="text-sm font-bold text-gray-600 mb-3">📱 App Móvil (Delivery)</h3>
+              <div className="space-y-3">
+                {stats.recentOrders.delivery.slice(0, 3).map((order: any) => {
+                  const total = order.orderProducts.reduce((sum: number, op: any) => 
+                    sum + (Number(op.quantity) * Number(op.product.price)), 0
+                  );
+                  const clientName = order.clientName || order.client?.name || 'Usuario eliminado';
+                  return (
+                    <div key={`d-${order.id}`} className="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                            {clientName.charAt(0)}
+                          </div>
+                          <span className="font-semibold text-gray-900 text-sm">{clientName}</span>
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">
+                            Entregado
+                          </span>
+                        </div>
+                        <span className="text-base font-bold text-gray-900">
+                          {formatCurrency(total)}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {formatDate(new Date(Number(order.timestamp)))} • {order.orderProducts.length} productos
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

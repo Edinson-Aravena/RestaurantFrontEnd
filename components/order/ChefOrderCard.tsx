@@ -13,6 +13,8 @@ interface ChefOrderCardProps {
 export default function ChefOrderCard({ order, onComplete }: ChefOrderCardProps) {
   const isInProgress = order.prepStatus === 'IN_PROGRESS';
   
+  console.log(`Order ${order.orderId} - Anotaciones:`, order.anotaciones, typeof order.anotaciones);
+  
   const handleOrderClick = async () => {
     if (!isInProgress) {
       // Primer click: marcar como "En Preparación"
@@ -94,37 +96,25 @@ export default function ChefOrderCard({ order, onComplete }: ChefOrderCardProps)
       {/* Header decorativo */}
       <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${statusConfig.badgeBg}`}></div>
 
-      {/* Badge de orden y estado */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
-        <div className={`${orderTypeConfig.color} text-white px-3 py-1 rounded-full text-xs font-bold shadow-md flex items-center gap-1`}>
-          <span>{orderTypeConfig.icon}</span>
-          <span>{orderTypeConfig.label}</span>
-        </div>
-        <div className={`bg-gradient-to-r ${statusConfig.badgeBg} text-white px-3 py-1 rounded-full text-xs font-bold shadow-md`}>
-          {order.orderId}
-        </div>
-        <div className={`bg-gradient-to-r ${statusConfig.bgColor} text-gray-800 px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${statusConfig.borderColor}`}>
-          {statusConfig.statusBadge}
-        </div>
-      </div>
-
       <div className="p-4 space-y-3">
-        {/* Cliente */}
-        <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-lg border border-blue-200">
-          <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-2xl flex-shrink-0">
-            👤
+        {/* Header con badges */}
+        <div className="flex justify-between items-start gap-2 pb-2">
+          <div className={`${orderTypeConfig.color} text-white px-3 py-1 rounded-full text-xs font-bold shadow-md flex items-center gap-1`}>
+            <span>{orderTypeConfig.icon}</span>
+            <span>{orderTypeConfig.label}</span>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-blue-600 font-bold uppercase">Cliente</p>
-            <p className="text-lg font-black text-gray-900 truncate">{order.customerName}</p>
-            {order.address && (
-              <p className="text-xs text-gray-700 font-semibold truncate">📍 {order.address}</p>
-            )}
+          <div className="flex flex-col gap-2 items-end">
+            <div className={`bg-gradient-to-r ${statusConfig.badgeBg} text-white px-3 py-1 rounded-full text-xs font-bold shadow-md`}>
+              {order.orderId}
+            </div>
+            <div className={`bg-gradient-to-r ${statusConfig.bgColor} text-gray-800 px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${statusConfig.borderColor}`}>
+              {statusConfig.statusBadge}
+            </div>
           </div>
         </div>
 
         {/* Productos */}
-        <div className="space-y-2 pt-3 border-t-2 border-gray-200">
+        <div className="space-y-2 pt-3">
           <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">Productos a preparar</p>
           <div className="space-y-1">
             {order.products.map((product, index) => (

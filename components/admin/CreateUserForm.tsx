@@ -72,13 +72,26 @@ export default function CreateUserForm() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Nombre completo
+                  Nombre *
                 </label>
                 <input
                   type="text"
                   name="name"
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="Juan Pérez"
+                  placeholder="Juan"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Apellido
+                </label>
+                <input
+                  type="text"
+                  name="lastname"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="Pérez"
                 />
               </div>
 
@@ -98,12 +111,21 @@ export default function CreateUserForm() {
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   Teléfono
                 </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="+56 9 1234 5678"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value="+56"
+                    disabled
+                    className="w-16 px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 font-semibold"
+                  />
+                  <input
+                    type="tel"
+                    name="phone"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="9 1234 5678"
+                    maxLength={11}
+                  />
+                </div>
               </div>
 
               <div>
@@ -130,7 +152,7 @@ export default function CreateUserForm() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="">Seleccionar rol...</option>
-                  <option value="WAITER">🍽️ Garzón - Quiosco</option>
+                  <option value="WAITER">🍽️ Garzón - Restaurant</option>
                   <option value="CHEF">👨‍🍳 Chef - Órdenes</option>
                   <option value="REPARTIDOR">🛵 Repartidor - Entregas</option>
                   <option value="CLIENTE">👤 Cliente - App Móvil</option>

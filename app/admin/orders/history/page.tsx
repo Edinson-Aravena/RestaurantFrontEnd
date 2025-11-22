@@ -31,9 +31,9 @@ async function getAllOrders(
     whereClause.name = filterTable;
   }
 
-  // Obtener órdenes del quiosco y delivery en paralelo
+  // Obtener órdenes del restaurant y delivery en paralelo
   const [quioscoOrders, deliveryOrders, totalQuiosco, totalDelivery] = await Promise.all([
-    // Órdenes del quiosco
+    // Órdenes del restaurant
     prisma.order.findMany({
       take: pageSize,
       skip,
@@ -58,8 +58,17 @@ async function getAllOrders(
         createdAt: 'desc'
       },
       include: {
-        client: true,
-        address: true,
+        client: {
+          select: {
+            name: true
+          }
+        },
+        address: {
+          select: {
+            address: true,
+            neighborhood: true
+          }
+        },
         orderProducts: {
           include: {
             product: true
@@ -80,8 +89,10 @@ async function getAllOrders(
     return {
       id: order.id,
       type: 'DELIVERY' as const,
-      customerName: order.client.name,
-      address: `${order.address.address}, ${order.address.neighborhood}`,
+      customerName: order.clientName || order.client?.name || 'Usuario eliminado',
+      address: order.deliveryAddress && order.deliveryNeighborhood 
+        ? `${order.deliveryAddress}, ${order.deliveryNeighborhood}` 
+        : (order.address ? `${order.address.address}, ${order.address.neighborhood}` : 'Dirección no disponible'),
       total,
       date: new Date(Number(order.timestamp)),
       orderProducts: order.orderProducts.map(op => ({
@@ -91,7 +102,7 @@ async function getAllOrders(
     };
   });
 
-  // Mapear órdenes del quiosco
+  // Mapear órdenes del restaurant
   const mappedQuioscoOrders = quioscoOrders.map(order => ({
     id: order.id,
     type: 'QUIOSCO' as const,

@@ -112,17 +112,17 @@ export default function DeliveryOrderCard({ order, onUpdate }: Props) {
             {/* Header decorativo */}
             <div className={`h-1.5 bg-gradient-to-r ${statusConfig.badgeBg}`}></div>
 
-            {/* Badge de orden y estado */}
-            <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
-                <div className={`bg-gradient-to-r ${statusConfig.badgeBg} text-white px-3 py-1 rounded-full text-xs font-bold shadow-md`}>
-                    Orden #{order.id}
-                </div>
-                <div className={`bg-gradient-to-r ${statusConfig.bgColor} text-gray-800 px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${statusConfig.borderColor}`}>
-                    {statusConfig.statusBadge}
-                </div>
-            </div>
-
             <div className="p-4 space-y-3">
+                {/* Header con badges */}
+                <div className="flex justify-end gap-2 pb-2">
+                    <div className={`bg-gradient-to-r ${statusConfig.badgeBg} text-white px-3 py-1 rounded-full text-xs font-bold shadow-md`}>
+                        Orden #{order.id}
+                    </div>
+                    <div className={`bg-gradient-to-r ${statusConfig.bgColor} text-gray-800 px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${statusConfig.borderColor}`}>
+                        {statusConfig.statusBadge}
+                    </div>
+                </div>
+
                 {/* Cliente */}
                 <div className="flex items-center gap-2">
                     <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${statusConfig.bgColor} flex items-center justify-center text-xl`}>
