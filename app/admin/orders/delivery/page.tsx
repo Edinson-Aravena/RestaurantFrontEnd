@@ -43,7 +43,7 @@ export default function DeliveryOrdersPage() {
     const fetcher = () => fetch(url).then(res => res.json())
 
     const { data, error, isLoading, mutate } = useSWR<DeliveryOrder[]>(url, fetcher, {
-        refreshInterval: 30000,
+        refreshInterval: 10000,
         revalidateOnFocus: true
     })
 

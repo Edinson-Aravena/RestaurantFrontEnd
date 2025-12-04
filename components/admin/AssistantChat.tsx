@@ -17,6 +17,170 @@ type AssistantChatProps = {
 
 const STORAGE_KEY = 'assistant_chat_history';
 
+// Componente para formatear el contenido del mensaje
+function FormattedMessage({ content }: { content: string }) {
+  // Función para parsear y formatear el contenido
+  const formatContent = (text: string) => {
+    const lines = text.split('\n');
+    const elements: JSX.Element[] = [];
+    let listItems: string[] = [];
+    let listType: 'numbered' | 'bullet' | null = null;
+    let currentIndex = 0;
+
+    const flushList = () => {
+      if (listItems.length > 0) {
+        if (listType === 'numbered') {
+          elements.push(
+            <ol key={`list-${currentIndex}`} className="space-y-2 my-3">
+              {listItems.map((item, i) => (
+                <li key={i} className="flex items-start gap-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-3 border-l-4 border-amber-400">
+                  <span className="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    {i + 1}
+                  </span>
+                  <span className="flex-1 text-gray-700">{formatInlineText(item)}</span>
+                </li>
+              ))}
+            </ol>
+          );
+        } else {
+          elements.push(
+            <ul key={`list-${currentIndex}`} className="space-y-2 my-3">
+              {listItems.map((item, i) => (
+                <li key={i} className="flex items-start gap-3 bg-gray-50 rounded-lg p-3 border-l-4 border-blue-400">
+                  <span className="flex-shrink-0 text-blue-500">•</span>
+                  <span className="flex-1 text-gray-700">{formatInlineText(item)}</span>
+                </li>
+              ))}
+            </ul>
+          );
+        }
+        listItems = [];
+        listType = null;
+      }
+    };
+
+    // Formatear texto inline (negrita, emojis, montos)
+    const formatInlineText = (text: string): JSX.Element => {
+      // Detectar montos de dinero y resaltarlos
+      let formatted = text;
+      
+      // Crear elementos JSX para diferentes patrones
+      const parts: (string | JSX.Element)[] = [];
+      let lastIndex = 0;
+      
+      // Patrón para montos de dinero
+      const moneyRegex = /\$[\d,\.]+(\.\d{2})?/g;
+      let match;
+      
+      while ((match = moneyRegex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(text.substring(lastIndex, match.index));
+        }
+        parts.push(
+          <span key={match.index} className="font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+            {match[0]}
+          </span>
+        );
+        lastIndex = match.index + match[0].length;
+      }
+      
+      if (lastIndex < text.length) {
+        parts.push(text.substring(lastIndex));
+      }
+      
+      return <>{parts.length > 0 ? parts : text}</>;
+    };
+
+    lines.forEach((line, idx) => {
+      currentIndex = idx;
+      const trimmedLine = line.trim();
+
+      // Detectar listas numeradas (1. 2. 3. o 1) 2) 3))
+      const numberedMatch = trimmedLine.match(/^(\d+)[\.\)]\s+(.+)$/);
+      if (numberedMatch) {
+        if (listType !== 'numbered') {
+          flushList();
+          listType = 'numbered';
+        }
+        listItems.push(numberedMatch[2]);
+        return;
+      }
+
+      // Detectar listas con guiones o bullets
+      const bulletMatch = trimmedLine.match(/^[-•*]\s+(.+)$/);
+      if (bulletMatch) {
+        if (listType !== 'bullet') {
+          flushList();
+          listType = 'bullet';
+        }
+        listItems.push(bulletMatch[1]);
+        return;
+      }
+
+      // Si llegamos aquí, no es un elemento de lista
+      flushList();
+
+      // Líneas vacías
+      if (!trimmedLine) {
+        elements.push(<div key={idx} className="h-2" />);
+        return;
+      }
+
+      // Detectar encabezados con emojis al inicio (títulos)
+      const headerMatch = trimmedLine.match(/^(🔥|📊|📦|💡|📈|🏆|⚠️|✅|❌|💰|🎯|📋|🛒|👥)\s*(.+)/);
+      if (headerMatch) {
+        elements.push(
+          <div key={idx} className="flex items-center gap-2 font-bold text-gray-800 mt-4 mb-2 text-lg">
+            <span className="text-2xl">{headerMatch[1]}</span>
+            <span>{headerMatch[2]}</span>
+          </div>
+        );
+        return;
+      }
+
+      // Detectar líneas que parecen conclusiones o resúmenes
+      if (trimmedLine.toLowerCase().startsWith('por lo tanto') || 
+          trimmedLine.toLowerCase().startsWith('en resumen') ||
+          trimmedLine.toLowerCase().startsWith('en conclusión') ||
+          trimmedLine.toLowerCase().startsWith('recomendación')) {
+        elements.push(
+          <div key={idx} className="bg-blue-50 border border-blue-200 rounded-lg p-3 my-3">
+            <p className="text-blue-800 font-medium">{formatInlineText(trimmedLine)}</p>
+          </div>
+        );
+        return;
+      }
+
+      // Detectar líneas de advertencia o importante
+      if (trimmedLine.toLowerCase().includes('importante') || 
+          trimmedLine.toLowerCase().includes('atención') ||
+          trimmedLine.toLowerCase().includes('nota:')) {
+        elements.push(
+          <div key={idx} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 my-3 flex items-start gap-2">
+            <span className="text-yellow-500">⚠️</span>
+            <p className="text-yellow-800">{formatInlineText(trimmedLine)}</p>
+          </div>
+        );
+        return;
+      }
+
+      // Texto normal
+      elements.push(
+        <p key={idx} className="text-gray-700 leading-relaxed">
+          {formatInlineText(trimmedLine)}
+        </p>
+      );
+    });
+
+    // Flush cualquier lista pendiente
+    flushList();
+
+    return elements;
+  };
+
+  return <div className="space-y-1">{formatContent(content)}</div>;
+}
+
 export default function AssistantChat({ userName }: AssistantChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isClient, setIsClient] = useState(false);
@@ -251,33 +415,39 @@ export default function AssistantChat({ userName }: AssistantChatProps) {
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+              className={`max-w-[85%] rounded-2xl px-5 py-4 shadow-sm ${
                 message.role === 'user'
-                  ? 'bg-amber-500 text-white'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
                   : 'bg-white border border-gray-200 text-gray-800'
               }`}
             >
-              <div className="flex items-start gap-2">
+              <div className="flex items-start gap-3">
                 {message.role === 'assistant' && (
-                  <span className="text-lg">🤖</span>
+                  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm">🤖</span>
+                  </div>
                 )}
-                <div className="flex-1">
-                  <p className="whitespace-pre-wrap">{message.content}</p>
+                <div className="flex-1 min-w-0">
+                  {message.role === 'user' ? (
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                  ) : (
+                    <FormattedMessage content={message.content} />
+                  )}
                   
                   {/* Botón de descarga si es un reporte */}
                   {message.hasReport && message.reportType && (
                     <button
                       onClick={() => handleDownloadReport(message.reportType!)}
                       disabled={downloadingReport}
-                      className="mt-3 w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="mt-4 w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-3 rounded-xl font-semibold transition-all disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
                     >
                       {downloadingReport ? (
                         <>
-                          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          Generando...
+                          Generando reporte...
                         </>
                       ) : (
                         <>
@@ -290,7 +460,7 @@ export default function AssistantChat({ userName }: AssistantChatProps) {
                     </button>
                   )}
                   
-                  <p className={`text-xs mt-1 ${message.role === 'user' ? 'text-amber-100' : 'text-gray-400'}`}>
+                  <p className={`text-xs mt-2 ${message.role === 'user' ? 'text-amber-100' : 'text-gray-400'}`}>
                     {message.timestamp.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>

@@ -9,7 +9,8 @@ async function getAllOrders(
   page: number,
   pageSize: number,
   filterCategory?: string,
-  filterTable?: string
+  filterTable?: string,
+  filterType?: string
 ) {
   const skip = (page - 1) * pageSize;
 
@@ -26,15 +27,18 @@ async function getAllOrders(
     };
   }
 
-  // Filtro por nombre de mesa
+  // Filtro por nombre de mesa (solo aplica a órdenes locales)
   if (filterTable) {
     whereClause.name = filterTable;
   }
 
-  // Obtener órdenes del restaurant y delivery en paralelo
-  const [quioscoOrders, deliveryOrders, totalQuiosco, totalDelivery] = await Promise.all([
-    // Órdenes del restaurant
-    prisma.order.findMany({
+  // Determinar qué órdenes buscar según el filtro de tipo
+  const shouldFetchQuiosco = !filterType || filterType === 'local';
+  const shouldFetchDelivery = !filterType || filterType === 'delivery';
+
+  // Si hay filtro de mesa, solo buscar en local
+  if (filterTable) {
+    const quioscoOrders = await prisma.order.findMany({
       take: pageSize,
       skip,
       where: whereClause,
@@ -48,9 +52,42 @@ async function getAllOrders(
           }
         }
       }
-    }),
-    // Órdenes de delivery
-    prisma.deliveryOrder.findMany({
+    });
+
+    const totalQuiosco = await prisma.order.count({ where: whereClause });
+
+    const mappedQuioscoOrders = quioscoOrders.map(order => ({
+      id: order.id,
+      type: 'QUIOSCO' as const,
+      name: order.name,
+      total: order.total,
+      date: order.date,
+      orderProducts: order.orderProducts
+    }));
+
+    return { orders: mappedQuioscoOrders, totalOrders: totalQuiosco };
+  }
+
+  // Obtener órdenes según el filtro de tipo
+  const [quioscoOrders, deliveryOrders, totalQuiosco, totalDelivery] = await Promise.all([
+    // Órdenes del restaurant (solo si aplica)
+    shouldFetchQuiosco ? prisma.order.findMany({
+      take: pageSize,
+      skip,
+      where: whereClause,
+      orderBy: {
+        date: 'desc'
+      },
+      include: {
+        orderProducts: {
+          include: {
+            product: true
+          }
+        }
+      }
+    }) : Promise.resolve([]),
+    // Órdenes de delivery (solo si aplica)
+    shouldFetchDelivery ? prisma.deliveryOrder.findMany({
       where: {
         status: 'ENTREGADO'
       },
@@ -75,9 +112,9 @@ async function getAllOrders(
           }
         }
       }
-    }),
-    prisma.order.count({ where: whereClause }),
-    prisma.deliveryOrder.count({ where: { status: 'ENTREGADO' } })
+    }) : Promise.resolve([]),
+    shouldFetchQuiosco ? prisma.order.count({ where: whereClause }) : Promise.resolve(0),
+    shouldFetchDelivery ? prisma.deliveryOrder.count({ where: { status: 'ENTREGADO' } }) : Promise.resolve(0)
   ]);
 
   // Mapear órdenes de delivery al formato unificado
@@ -129,12 +166,14 @@ export default async function OrderHistoryPage({
     page?: string;
     category?: string;
     table?: string;
+    type?: string;
   }
 }) {
   const page = Number(searchParams.page) || 1;
   const pageSize = 10;
   const filterCategory = searchParams.category;
   const filterTable = searchParams.table;
+  const filterType = searchParams.type;
 
   if (page < 1) redirect('/admin/orders/history');
 
@@ -148,7 +187,7 @@ export default async function OrderHistoryPage({
     id: Number(cat.id)
   }));
 
-  const { orders, totalOrders } = await getAllOrders(page, pageSize, filterCategory, filterTable);
+  const { orders, totalOrders } = await getAllOrders(page, pageSize, filterCategory, filterTable, filterType);
 
   const totalPages = Math.ceil(totalOrders / pageSize);
 
@@ -245,6 +284,7 @@ export default async function OrderHistoryPage({
         categories={categoriesForFilter as any}
         filterCategory={filterCategory}
         filterTable={filterTable}
+        filterType={filterType}
       />
 
       {/* Tabla de órdenes */}
@@ -332,7 +372,7 @@ export default async function OrderHistoryPage({
                 <div className="flex items-center gap-2">
                   {/* Botón Anterior */}
                   <Link
-                    href={page > 1 ? `/admin/orders/history?page=${page - 1}${filterCategory ? `&category=${filterCategory}` : ''}${filterTable ? `&table=${filterTable}` : ''}` : '#'}
+                    href={page > 1 ? `/admin/orders/history?page=${page - 1}${filterCategory ? `&category=${filterCategory}` : ''}${filterTable ? `&table=${filterTable}` : ''}${filterType ? `&type=${filterType}` : ''}` : '#'}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       page > 1
                         ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -353,7 +393,7 @@ export default async function OrderHistoryPage({
                       return (
                         <Link
                           key={pageNum}
-                          href={`/admin/orders/history?page=${pageNum}${filterCategory ? `&category=${filterCategory}` : ''}${filterTable ? `&table=${filterTable}` : ''}`}
+                          href={`/admin/orders/history?page=${pageNum}${filterCategory ? `&category=${filterCategory}` : ''}${filterTable ? `&table=${filterTable}` : ''}${filterType ? `&type=${filterType}` : ''}`}
                           className={`w-10 h-10 flex items-center justify-center rounded-lg font-semibold transition-colors ${
                             pageNum === page
                               ? 'bg-amber-500 text-white shadow-md'
@@ -375,7 +415,7 @@ export default async function OrderHistoryPage({
 
                   {/* Botón Siguiente */}
                   <Link
-                    href={page < totalPages ? `/admin/orders/history?page=${page + 1}${filterCategory ? `&category=${filterCategory}` : ''}${filterTable ? `&table=${filterTable}` : ''}` : '#'}
+                    href={page < totalPages ? `/admin/orders/history?page=${page + 1}${filterCategory ? `&category=${filterCategory}` : ''}${filterTable ? `&table=${filterTable}` : ''}${filterType ? `&type=${filterType}` : ''}` : '#'}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       page < totalPages
                         ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'

@@ -9,7 +9,7 @@ const adminNavigation = [
     {url: '/admin/orders/history', text: 'Historial', blank: false, icon: '📊'},
     {url: '/admin/products', text: 'Productos', blank: false, icon: '🍽️'},
     {url: '/admin/users', text: 'Usuarios', blank: false, icon: '👥'},
-    {url: '/order/cafe', text: 'Ver Restaurant', blank: true, icon: '🏪'},
+    {url: '/order/almuerzos', text: 'Ver Restaurant', blank: true, icon: '🏪'},
 ]
 
 export default function AdminSidebar() {
